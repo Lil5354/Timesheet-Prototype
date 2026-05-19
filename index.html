@@ -213,6 +213,8 @@
         const submittedMins = parseMins(durationInput);
         if (submittedMins <= 0) {
           setIsLogWorkModalOpen(false);
+          setPostSubmitMsg('No worklog saved — duration is 0 minutes.');
+          setTimeout(() => setPostSubmitMsg(null), 4000);
           return;
         }
         const newTotal = totalLoggedMins + submittedMins;
