@@ -242,14 +242,16 @@
       const effectiveOverMins = Math.max(0, overTimeMins);
 
       /* === DURATION TAG — Giải thích cho dev ===
-       *  TAG "AUTO-FILL" (xanh dương): giá trị tự động điền vào Duration.
+       * Nhãn này chỉ hiển thị ở prototype để dev biết trạng thái, sẽ không dùng trên UI thật.
+       *
+       * TAG "AUTO-FILL" (xanh dương): giá trị tự động điền vào Duration.
        *  - End Timer: auto-fill = actual elapsed time (thời gian timer đã chạy)
        *  - Manual Log: auto-fill = remaining_capacity tại thời điểm mở form
        *
-       *  TAG "NO REMAINING" (vàng): auto-fill = 0h.
+       * TAG "NO REMAINING" (vàng): auto-fill = 0h.
        *  - Xảy ra khi remaining_capacity <= 0 (đã hết giờ tiêu chuẩn trong ngày)
        *
-       *  TAG "USER EDITED" (xám): user đã tự sửa Duration.
+       * TAG "USER EDITED" (xám): user đã tự sửa Duration.
        *  - Khi user sửa, hệ thống không re-auto-fill.
        *  - Submit vẫn được phép, không block.
        */
@@ -259,10 +261,10 @@
         durationTag = 'USER EDITED';
         tagColor = 'bg-gray-600 text-white';
       } else if (inputMins === 0) {
-        durationTag = 'NO REMAINING';
+        durationTag = 'HẾT GIỜ (NO REMAINING)';
         tagColor = 'bg-[#fef08a] text-[#854d0e] border border-[#fde047]';
       } else {
-        durationTag = 'AUTO-FILL';
+        durationTag = 'TỰ ĐỘNG (AUTO-FILL)';
         tagColor = 'bg-blue-600 text-white';
       }
 
@@ -348,7 +350,7 @@
 
                 /* Prototype note: 1 giây chạy timer = 1 phút để test nhanh các case */
                 h('div', { className: 'absolute top-full left-1/2 -translate-x-1/2 mt-0.5 text-[10px] text-gray-400 whitespace-nowrap pointer-events-none leading-tight text-center' },
-                  '⏱ 1s chạy timer = 1p log — test case nào chạy số giây tương ứng'
+                  '⏱ 1s chạy timer = 1p log — prototype, sẽ không dùng ở môi trường thật'
                 ),
 
                 isTimerDropdownOpen && h('div', { className: 'absolute top-full right-0 mt-1 w-[400px] bg-white border border-gray-200 rounded shadow-lg z-50 overflow-hidden' },
