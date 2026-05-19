@@ -310,47 +310,41 @@ export default function App() {
         <div className="flex-1 overflow-auto p-6">
           <div className="bg-white rounded shadow-sm border border-gray-200 pb-8 min-w-[1000px]">
             <div className="px-6 py-4">
-              <h1 className="text-[15px] text-gray-800">Daily report at May 11, 2026, working time from 09:00 to 18:00</h1>
+              <h1 className="text-[15px] text-gray-800">Daily report at May 19, 2026, working time from 09:00 to 18:00</h1>
             </div>
 
-            {/* Progress Chart */}
-            <div className="px-6 pb-2">
-              <div className="flex items-center gap-4 text-xs text-gray-500 mb-1.5">
-                <span className="flex items-center gap-1">
-                  <span className="w-2.5 h-2.5 rounded-sm bg-blue-500 inline-block"></span>
-                  Logged: {formatMins(totalLoggedMins)}
-                </span>
-                {totalLoggedMins < DAILY_CAP_MINS && (
-                  <span className="flex items-center gap-1">
-                    <span className="w-2.5 h-2.5 rounded-sm bg-blue-100 inline-block"></span>
-                    Remaining: {formatMins(remainingTotal)}
-                  </span>
-                )}
-                {effectiveOverMins > 0 && (
-                  <span className="flex items-center gap-1">
-                    <span className="w-2.5 h-2.5 rounded-sm bg-[#f59e0b] inline-block"></span>
-                    Extra/OT: {formatMins(effectiveOverMins)}
-                  </span>
-                )}
-              </div>
-              <div className="flex items-center h-5 rounded-full bg-blue-100 relative overflow-hidden">
-                <div className="h-full bg-blue-500 rounded-l-full transition-all" style={{width: `${Math.min(100, (totalLoggedMins / DAILY_CAP_MINS) * 100)}%`}}></div>
-                {effectiveOverMins > 0 && (
-                  <div className="h-full bg-[#f59e0b] rounded-r-full transition-all" style={{width: `${Math.min(100, (effectiveOverMins / DAILY_CAP_MINS) * 100)}%`}}></div>
-                )}
-                <div className="absolute right-0 top-0 bottom-0 w-0.5 bg-gray-400"></div>
-              </div>
-              <div className="flex justify-between text-[10px] text-gray-400 mt-1">
-                <span>0h</span>
-                <span>{formatMins(DAILY_CAP_MINS)}</span>
-              </div>
+            {/* Timeline Area */}
+            <div className="relative w-full h-28 mt-2 select-none">
+              {/* Small Time Labels */}
+              <div className="absolute top-2 left-[10%] text-[11px] text-gray-500 transform -translate-x-1/2">08:30</div>
+              <div className="absolute top-2 left-[20%] text-[11px] text-gray-500 transform -translate-x-1/2">09:30</div>
+              <div className="absolute top-2 left-[38%] text-[11px] text-gray-500 transform -translate-x-1/2">11:30</div>
+              <div className="absolute top-2 left-[48%] text-[11px] text-gray-500 transform -translate-x-1/2">12:30</div>
+              <div className="absolute top-2 left-[88%] text-[11px] text-gray-500 transform -translate-x-1/2">17:30</div>
+              <div className="absolute top-2 left-[96%] text-[11px] text-gray-500 transform -translate-x-1/2">18:30</div>
+
+              {/* Base Line */}
+              <div className="absolute top-10 left-12 right-12 h-1.5 bg-gray-300 rounded-full z-0"></div>
+
+              {/* Green segment from 09:00 to 12:00 */}
+              <div className="absolute top-10 left-[15%] w-[28%] h-1.5 bg-[#84cc16] z-0"></div>
+
+              {/* Current Time Indicator */}
+              <div className="absolute top-0 bottom-2 left-[52%] w-[2px] bg-blue-300 z-0"></div>
+              <div className="absolute -top-3 left-[52%] text-[11px] text-blue-600 font-medium transform -translate-x-1/2 whitespace-nowrap bg-white px-1">CURRENT TIME 13:03</div>
+
+              {/* Nodes */}
+              <TimelineNode time="09:00" status="Reported At Time" color="bg-[#84cc16]" left="left-[15%]" />
+              <TimelineNode time="12:00" status="Reported At Time" color="bg-[#84cc16]" left="left-[43%]" />
+              <TimelineNode time="13:30" status="Needless Report" color="bg-gray-300" textColor="text-gray-600" left="left-[58%]" />
+              <TimelineNode time="18:00" status="Future Report" color="bg-white" textColor="text-gray-700" border="border-[#84cc16]" left="left-[90%]" />
             </div>
 
             {/* Date Controls & Action */}
             <div className="flex items-center justify-between px-6 mt-4 mb-6 border-b border-gray-100 pb-4">
               <div className="flex items-center space-x-2">
                 <button className="w-7 h-7 rounded border border-gray-300 flex items-center justify-center text-gray-600 hover:bg-gray-50"><ChevronLeft size={16} /></button>
-                <span className="text-sm font-medium text-gray-700 mx-2">May 11 , 2026</span>
+                <span className="text-sm font-medium text-gray-700 mx-2">May 19 , 2026</span>
                 <button className="w-7 h-7 rounded border border-gray-300 flex items-center justify-center text-gray-600 hover:bg-gray-50"><ChevronRight size={16} /></button>
                 <button className="px-3 py-1 text-sm font-medium text-white bg-[#2563eb] rounded ml-2">Today</button>
               </div>
@@ -359,29 +353,59 @@ export default function App() {
               </button>
             </div>
 
-            {/* Data Table */}
+            {/* Detailed Data Table */}
             <div className="px-6">
-              <div className="grid grid-cols-[100px_minmax(200px,1.5fr)_120px_minmax(150px,1.2fr)] gap-4 pb-2 border-b border-gray-200 text-xs font-semibold text-gray-600">
+              {/* Table Header */}
+              <div className="grid grid-cols-[80px_minmax(180px,1.5fr)_110px_minmax(150px,1.2fr)_minmax(150px,1.2fr)_80px_minmax(100px,1fr)] gap-4 pb-2 border-b border-gray-200 text-xs font-semibold text-gray-600">
                 <div>Project</div>
                 <div>Task Key</div>
-                <div>Logwork (8h)</div>
-                <div>Progress</div>
+                <div>Logwork (3.5h)</div>
+                <div>09:00 [Report at 09:25]</div>
+                <div>12:00 [Report at 11:56]</div>
+                <div>13:30</div>
+                <div>18:00</div>
               </div>
 
               {/* Table Row 1 */}
-              <div className="grid grid-cols-[100px_minmax(200px,1.5fr)_120px_minmax(150px,1.2fr)] gap-4 py-4 border-b border-gray-100 items-center text-[13px] text-gray-700 relative">
+              <div className="grid grid-cols-[80px_minmax(180px,1.5fr)_110px_minmax(150px,1.2fr)_minmax(150px,1.2fr)_80px_minmax(100px,1fr)] gap-4 py-4 border-b border-gray-100 items-center text-[13px] text-gray-700 relative">
                 <div>XCORP</div>
                 <div><a href="#" className="text-blue-600 hover:underline">XCOR-22051:</a> [OKR] OKR Template</div>
                 <div onClick={handleManualLogWork} className="flex items-center text-blue-600 cursor-pointer hover:underline">
                   <Clock size={14} className="mr-1" />
-                  {formatMins(totalLoggedMins)}/8h
+                  0h/63h
                 </div>
-                <div className="flex items-center pr-4">
-                  <div className="h-2.5 rounded-full bg-[#93c5fd] relative overflow-hidden flex-1 max-w-[150px]">
-                    <div className="absolute inset-0 striped-bg bg-blue-500" style={{width: '80%'}}></div>
-                  </div>
-                  <span className="ml-2 text-xs text-gray-500">80%</span>
+                {/* 09:00 Block */}
+                <TableProgressBar percent={40} />
+                {/* 12:00 Block */}
+                <TableProgressBar percent={40} bubble="1" />
+                {/* 13:30 Block */}
+                <div></div>
+                {/* 18:00 Block */}
+                <div></div>
+              </div>
+
+              {/* Table Row 2 */}
+              <div className="grid grid-cols-[80px_minmax(180px,1.5fr)_110px_minmax(150px,1.2fr)_minmax(150px,1.2fr)_80px_minmax(100px,1fr)] gap-4 py-4 border-b border-gray-100 items-center text-[13px] text-gray-700 relative">
+                <div>XCORP</div>
+                <div><a href="#" className="text-blue-600 hover:underline">XCOR-22811:</a> Cập nhật logic Timer: Giới hạn tổ...</div>
+                <div onClick={handleManualLogWork} className="flex items-center text-blue-600 cursor-pointer hover:underline">
+                  <Clock size={14} className="mr-1" />
+                  3.5h/19.5h
                 </div>
+                {/* 09:00 Block */}
+                <TableProgressBar percent={80} />
+                {/* 12:00 Block */}
+                <TableProgressBar percent={80} bubble="1" />
+                {/* 13:30 Block */}
+                <div></div>
+                {/* 18:00 Block */}
+                <div></div>
+              </div>
+
+              {/* General Comment */}
+              <div className="py-4 text-[13px]">
+                <div className="text-gray-700 mb-1">General comment</div>
+                <div className="text-gray-400 italic">None</div>
               </div>
             </div>
           </div>
@@ -667,6 +691,9 @@ export default function App() {
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 10px; }
+        .striped-bg {
+          background-image: repeating-linear-gradient(45deg,transparent,transparent 4px,rgba(255,255,255,0.15) 4px,rgba(255,255,255,0.15) 8px);
+        }
       `}} />
     </div>
   );
@@ -688,6 +715,33 @@ function SubNavItem({ icon, label }) {
     <div className="flex items-center px-4 py-2 pl-11 text-[13px] text-gray-600 hover:bg-gray-50 cursor-pointer">
       <span className="text-gray-400 mr-3">{icon}</span>
       {label}
+    </div>
+  );
+}
+
+function TimelineNode({ time, status, color, left, textColor = "text-white", border = "border-white" }) {
+  return (
+    <div className={`absolute top-10 transform -translate-y-1/2 -translate-x-1/2 flex flex-col items-center z-10 ${left}`}>
+      <div className={`w-10 h-10 rounded-full ${color} border-4 ${border} shadow-sm flex items-center justify-center`}>
+        <span className={`text-[11px] font-bold ${textColor}`}>{time}</span>
+      </div>
+      <div className="mt-2 text-[11px] text-gray-600 whitespace-nowrap">{status}</div>
+    </div>
+  );
+}
+
+function TableProgressBar({ percent, bubble }) {
+  return (
+    <div className="flex items-center w-full pr-2 relative">
+      {bubble && (
+        <div className="absolute -top-3 left-[60%] transform -translate-x-1/2 text-[9px] font-bold bg-[#e0f2fe] text-blue-700 px-1.5 py-0 rounded-sm border border-blue-200 z-10 shadow-sm">
+          {bubble}
+        </div>
+      )}
+      <div className="h-2.5 rounded-full bg-gray-200 relative overflow-hidden flex-1 max-w-[130px]">
+        <div className="absolute inset-0 bg-[#7dd3fc] striped-bg" style={{width: `${percent}%`}}></div>
+      </div>
+      <span className="ml-2 text-[11px] text-gray-500 w-8">{percent}%</span>
     </div>
   );
 }
