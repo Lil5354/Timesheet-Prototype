@@ -380,6 +380,34 @@
               h('div', { className: 'px-6 py-4' },
                 h('h1', { className: 'text-[15px] text-gray-800' }, 'Daily report at May 11, 2026, working time from 09:00 to 18:00')
               ),
+
+              /* Progress Chart */
+              h('div', { className: 'px-6 pb-2' },
+                h('div', { className: 'flex items-center gap-4 text-xs text-gray-500 mb-1.5' },
+                  h('span', { className: 'flex items-center gap-1' },
+                    h('span', { className: 'w-2.5 h-2.5 rounded-sm bg-blue-500 inline-block' }),
+                    `Logged: ${formatMins(totalLoggedMins)}`
+                  ),
+                  totalLoggedMins < DAILY_CAP_MINS && h('span', { className: 'flex items-center gap-1' },
+                    h('span', { className: 'w-2.5 h-2.5 rounded-sm bg-blue-100 inline-block' }),
+                    `Remaining: ${formatMins(remainingTotal)}`
+                  ),
+                  effectiveOverMins > 0 && h('span', { className: 'flex items-center gap-1' },
+                    h('span', { className: 'w-2.5 h-2.5 rounded-sm bg-[#f59e0b] inline-block' }),
+                    `Extra/OT: ${formatMins(effectiveOverMins)}`
+                  )
+                ),
+                h('div', { className: 'flex items-center h-5 rounded-full bg-blue-100 relative overflow-hidden' },
+                  h('div', { className: 'h-full bg-blue-500 rounded-l-full transition-all', style: { width: `${Math.min(100, (totalLoggedMins / DAILY_CAP_MINS) * 100)}%` } }),
+                  effectiveOverMins > 0 && h('div', { className: 'h-full bg-[#f59e0b] rounded-r-full transition-all', style: { width: `${Math.min(100, (effectiveOverMins / DAILY_CAP_MINS) * 100)}%` } }),
+                  h('div', { className: 'absolute right-0 top-0 bottom-0 w-0.5 bg-gray-400' })
+                ),
+                h('div', { className: 'flex justify-between text-[10px] text-gray-400 mt-1' },
+                  h('span', null, '0h'),
+                  h('span', null, `${formatMins(DAILY_CAP_MINS)}`)
+                )
+              ),
+
               h('div', { className: 'flex items-center justify-between px-6 mt-4 mb-6 border-b border-gray-100 pb-4' },
                 h('div', { className: 'flex items-center space-x-2' },
                   h('button', { className: 'w-7 h-7 rounded border border-gray-300 flex items-center justify-center text-gray-600 hover:bg-gray-50' },

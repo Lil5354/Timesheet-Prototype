@@ -313,6 +313,39 @@ export default function App() {
               <h1 className="text-[15px] text-gray-800">Daily report at May 11, 2026, working time from 09:00 to 18:00</h1>
             </div>
 
+            {/* Progress Chart */}
+            <div className="px-6 pb-2">
+              <div className="flex items-center gap-4 text-xs text-gray-500 mb-1.5">
+                <span className="flex items-center gap-1">
+                  <span className="w-2.5 h-2.5 rounded-sm bg-blue-500 inline-block"></span>
+                  Logged: {formatMins(totalLoggedMins)}
+                </span>
+                {totalLoggedMins < DAILY_CAP_MINS && (
+                  <span className="flex items-center gap-1">
+                    <span className="w-2.5 h-2.5 rounded-sm bg-blue-100 inline-block"></span>
+                    Remaining: {formatMins(remainingTotal)}
+                  </span>
+                )}
+                {effectiveOverMins > 0 && (
+                  <span className="flex items-center gap-1">
+                    <span className="w-2.5 h-2.5 rounded-sm bg-[#f59e0b] inline-block"></span>
+                    Extra/OT: {formatMins(effectiveOverMins)}
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center h-5 rounded-full bg-blue-100 relative overflow-hidden">
+                <div className="h-full bg-blue-500 rounded-l-full transition-all" style={{width: `${Math.min(100, (totalLoggedMins / DAILY_CAP_MINS) * 100)}%`}}></div>
+                {effectiveOverMins > 0 && (
+                  <div className="h-full bg-[#f59e0b] rounded-r-full transition-all" style={{width: `${Math.min(100, (effectiveOverMins / DAILY_CAP_MINS) * 100)}%`}}></div>
+                )}
+                <div className="absolute right-0 top-0 bottom-0 w-0.5 bg-gray-400"></div>
+              </div>
+              <div className="flex justify-between text-[10px] text-gray-400 mt-1">
+                <span>0h</span>
+                <span>{formatMins(DAILY_CAP_MINS)}</span>
+              </div>
+            </div>
+
             {/* Date Controls & Action */}
             <div className="flex items-center justify-between px-6 mt-4 mb-6 border-b border-gray-100 pb-4">
               <div className="flex items-center space-x-2">
