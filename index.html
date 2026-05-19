@@ -43,6 +43,7 @@
     const { useState, useEffect, useRef, createElement: h } = React;
 
     const DAILY_CAP_MINS = 480;
+    const MAX_DURATION_MINS = 1440;
 
     const formatMins = (totalMins) => {
       if (totalMins <= 0) return '0h';
@@ -211,6 +212,11 @@
 
       const handleSubmit = () => {
         const submittedMins = parseMins(durationInput);
+        if (totalLoggedMins + submittedMins > MAX_DURATION_MINS) {
+          setPostSubmitMsg(`If saved, today's total will be ${formatMins(totalLoggedMins + submittedMins)} — exceeds the 24-hour (${MAX_DURATION_MINS} minutes) limit.`);
+          setTimeout(() => setPostSubmitMsg(null), 4000);
+          return;
+        }
         if (submittedMins <= 0) {
           setIsLogWorkModalOpen(false);
           setPostSubmitMsg('No worklog saved — duration is 0 minutes.');
@@ -235,6 +241,8 @@
       const isOverLimit = projectedTotal > DAILY_CAP_MINS;
       const overTimeMins = projectedTotal - DAILY_CAP_MINS;
 
+      const isOverMax = projectedTotal > MAX_DURATION_MINS;
+
       const isTimerMode = logContext.type === 'timer';
       const actualMins = logContext.actualLoggedMins;
       const remainingIsPositive = remainingTotal > 0;
@@ -254,7 +262,7 @@
         tagColor = 'bg-blue-600 text-white';
       }
 
-      const isExtraTimeAuto = remainingTotal <= 0 || (isEditedByUser && isOverLimit);
+      const isExtraTimeAuto = (remainingTotal <= 0 || (isEditedByUser && isOverLimit)) && !isOverMax;
 
       const toggleConfigs = [
         { label: 'Extra Time', isOn: isExtraTimeOnManually || isExtraTimeAuto, activeColor: '#f59e0b', onToggle: () => setIsExtraTimeOnManually(!isExtraTimeOnManually) },
@@ -637,7 +645,7 @@
                   ),
                   h('div', null,
                     h('label', { className: 'block text-[11px] text-gray-500 mb-1.5 font-medium' }, 'Duration'),
-                    h('div', { className: `flex items-center justify-between border rounded px-3 py-2 bg-[#f8f9fa] ${isOverLimit ? 'border-[#f59e0b]' : 'border-blue-200'}` },
+                    h('div', { className: `flex items-center justify-between border rounded px-3 py-2 bg-[#f8f9fa] ${isOverMax ? 'border-red-500' : isOverLimit ? 'border-[#f59e0b]' : 'border-blue-200'}` },
                       h('input', {
                         type: 'text',
                         value: durationInput,
@@ -654,14 +662,22 @@
                   'Note: Các status (TỰ ĐỘNG, HẾT GIỜ, USER EDITED) trong ô Duration chỉ để chú thích prototype — sẽ không áp dụng trên giao diện triển khai.'
                 ),
 
+                /* ---- 24h MAX DURATION WARNING ---- */
+                isOverMax && h('div', { className: 'p-3 rounded text-[13px] border bg-red-50 text-red-700 border-red-200' },
+                  h('div', { className: 'flex items-start gap-2' },
+                    h(Icon, { name: 'AlertTriangle', size: 16, color: '#dc2626', className: 'mt-0.5 shrink-0' }),
+                    h('span', { className: 'font-bold' }, `If saved, today's total will be ${formatMins(projectedTotal)} — exceeds the 24-hour (${MAX_DURATION_MINS} minutes) limit. Please reduce the duration.`)
+                  )
+                ),
+
                 /* ---- END TIMER FLOW (FR-04) ---- */
-                isTimerMode && h('div', {
+                isTimerMode && !isOverMax && h('div', {
                   className: `p-3 rounded text-[13px] border ${
                     !isEditedByUser
                       ? ((remainingIsPositive && !actualExceedsRemaining)
                           ? 'bg-[#f0f4ff] text-[#172b4d] border-blue-100'
                           : 'bg-[#fffbeb] text-[#92400e] border-[#fde68a]')
-                      : (isOverLimit ? 'bg-[#fffbeb] text-[#92400e] border-[#fde68a]' : 'hidden')
+                      : (isOverLimit ? 'bg-[#fffbeb] text-[#92400e] border-[#fde68a]' : 'bg-[#f0f4ff] text-[#172b4d] border-blue-100')
                   }`
                 },
                   h('div', { className: 'flex items-start gap-2' },
@@ -674,7 +690,7 @@
                               )
                             )
                         )
-                      : (isOverLimit ? h(Icon, { name: 'AlertTriangle', size: 16, color: '#d97706', className: 'mt-0.5 shrink-0' }) : null),
+                      : (isOverLimit ? h(Icon, { name: 'AlertTriangle', size: 16, color: '#d97706', className: 'mt-0.5 shrink-0' }) : h(Icon, { name: 'Info', size: 16, color: '#3b82f6', className: 'mt-0.5 shrink-0' })),
                     h('div', null,
                       /* End Timer — Not edited, remaining > 0, actual ≤ remaining */
                       !isEditedByUser && remainingIsPositive && !actualExceedsRemaining &&
@@ -687,13 +703,16 @@
                         h('span', { className: 'font-bold block' }, `You have reached today's 8-hour standard threshold. You are Extra/OT by ${formatMins(effectiveOverMins)}.`),
                       /* End Timer — User edited and over limit */
                       isEditedByUser && isOverLimit &&
-                        h('span', { className: 'font-bold' }, `You are Extra/OT by ${formatMins(effectiveOverMins)} compared to today's standard hours.`)
+                        h('span', { className: 'font-bold' }, `You are Extra/OT by ${formatMins(effectiveOverMins)} compared to today's standard hours.`),
+                      /* End Timer — User edited but still within limit */
+                      isEditedByUser && !isOverLimit &&
+                        h('span', { className: 'font-medium' }, `Actual logged time: ${formatMins(actualMins)}. Remaining today: ${formatMins(DAILY_CAP_MINS - projectedTotal)}.`)
                     )
                   )
                 ),
 
                 /* ---- MANUAL LOG FLOW (FR-05) ---- */
-                !isTimerMode && h('div', {
+                !isTimerMode && !isOverMax && h('div', {
                   className: `p-3 rounded text-[13px] border ${
                     (!isEditedByUser && remainingTotal > 0) || (isEditedByUser && !isOverLimit)
                       ? 'bg-[#f0f4ff] text-[#172b4d] border-blue-100'
@@ -717,7 +736,10 @@
                         h('span', { className: 'font-bold block' }, `You have reached today's 8-hour standard threshold. You are Extra/OT by ${formatMins(effectiveOverMins)}.`),
                       /* Manual: Edited to be over limit */
                       isEditedByUser && isOverLimit &&
-                        h('span', { className: 'font-bold' }, `If saved, today's total will be ${formatMins(projectedTotal)} — you are Extra/OT by ${formatMins(effectiveOverMins)} compared to standard hours.`)
+                        h('span', { className: 'font-bold' }, `If saved, today's total will be ${formatMins(projectedTotal)} — you are Extra/OT by ${formatMins(effectiveOverMins)} compared to standard hours.`),
+                      /* Manual: Edited but still within limit */
+                      isEditedByUser && !isOverLimit &&
+                        h('span', { className: 'font-medium' }, `You have ${formatMins(DAILY_CAP_MINS - projectedTotal)} of standard time left to log today.`)
                     )
                   )
                 ),
@@ -739,7 +761,8 @@
                 h('button', { onClick: () => setIsLogWorkModalOpen(false), className: 'text-[#42526e] border border-gray-300 px-4 py-1.5 rounded text-[13px] font-bold hover:bg-gray-50' }, 'Discard'),
                 h('button', {
                   onClick: handleSubmit,
-                  className: 'px-6 py-1.5 rounded text-[13px] font-bold shadow-sm bg-[#2563eb] text-white hover:bg-blue-700'
+                  disabled: isOverMax,
+                  className: `px-6 py-1.5 rounded text-[13px] font-bold shadow-sm ${isOverMax ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-[#2563eb] text-white hover:bg-blue-700'}`
                 }, 'Submit')
               )
             )
