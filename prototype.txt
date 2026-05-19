@@ -167,18 +167,7 @@ export default function App() {
   const isTimerMode = logContext.type === 'timer';
   const actualMins = logContext.actualLoggedMins;
 
-  /* === DURATION TAG — Giải thích cho dev ===
-   * TAG "AUTO-FILL" (xanh dương): giá trị tự động điền vào Duration.
-   *   - End Timer: auto-fill = actual elapsed time (thời gian timer đã chạy)
-   *   - Manual Log: auto-fill = remaining_capacity tại thời điểm mở form
-   *
-   * TAG "NO REMAINING" (vàng): auto-fill = 0h.
-   *   - Xảy ra khi remaining_capacity <= 0 (đã hết giờ tiêu chuẩn trong ngày)
-   *
-   * TAG "USER EDITED" (xám): user đã tự sửa Duration.
-   *   - Khi user sửa, hệ thống không re-auto-fill.
-   *   - Submit vẫn được phép, không block.
-   */
+  // Determine Tag type
   let durationTag = '';
   let tagColor = '';
   if (isEditedByUser) {
@@ -303,11 +292,6 @@ export default function App() {
                   </div>
                 </div>
               )}
-
-              {/* Prototype note: 1s chạy timer = 1p log để test nhanh các case */}
-              <div className="absolute top-full left-1/2 -translate-x-1/2 mt-0.5 text-[10px] text-gray-400 whitespace-nowrap pointer-events-none leading-tight text-center">
-                ⏱ 1s chạy timer = 1p log — test case nào chạy số giây tương ứng
-              </div>
             </div>
             
             <Search size={18} className="text-gray-500 cursor-pointer" />
@@ -506,16 +490,8 @@ export default function App() {
                 </div>
 
                 {/* --- WARNING MESSAGES LOGIC --- */}
-              {/* ---- END TIMER FLOW (FR-04) ----
-               * Case 1a — remaining > 0 và actual ≤ remaining:
-               *   Auto-fill = actual elapsed, message xanh, không Extra/OT
-               * Case 1b — remaining > 0 và actual > remaining:
-               *   Auto-fill = actual elapsed, message cam, Extra/OT = (total+actual)-cap
-               * Case 2/3 — remaining ≤ 0:
-               *   Cap đã đạt/vượt trước session, message cam + tooltip khi remaining < 0
-               * User-edit: không re-auto-fill, message cam, submit vẫn được
-               */}
-              {isTimerMode && (
+                {/* ---- END TIMER FLOW (FR-04) ---- */}
+                {isTimerMode && (
                   <div className={`p-3 rounded text-[13px] border ${
                     !isEditedByUser
                       ? ((remainingIsPositive && !actualExceedsRemaining)
@@ -572,14 +548,8 @@ export default function App() {
                   </div>
                 )}
 
-              {/* ---- MANUAL LOG FLOW (FR-05) ----
-               * Auto-fill = remaining_capacity tại thời điểm mở form (snapshot)
-               * Case 1 — remaining > 0: message xanh, Extra/OT OFF
-               * Case 2/3 — remaining ≤ 0: auto-fill = 0, message cam + tooltip
-               * User-edit quá cap: message cam "If saved, total sẽ là...", submit vẫn được
-               * So với FR-04: không có "Actual logged time" line vì Manual Log không có session start
-               */}
-              {!isTimerMode && (
+                {/* ---- MANUAL LOG FLOW (FR-05) ---- */}
+                {!isTimerMode && (
                   <div className={`p-3 rounded text-[13px] border ${
                     (!isEditedByUser && remainingTotal > 0) || (isEditedByUser && !isOverLimit)
                       ? 'bg-[#f0f4ff] text-[#172b4d] border-blue-100'
