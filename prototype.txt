@@ -244,15 +244,48 @@ export default function App() {
 
           <div className="flex items-center space-x-4">
             {/* Timer Workflow Area */}
-            <div className="relative" ref={dropdownRef}>
+            <div ref={dropdownRef}>
               {!isTimerRunning ? (
-                <button 
-                  onClick={() => setIsTimerDropdownOpen(!isTimerDropdownOpen)}
-                  className="flex items-center px-3 py-1.5 text-xs font-semibold text-blue-600 bg-blue-50 border border-blue-100 rounded hover:bg-blue-100 transition-colors"
-                >
-                  <Timer size={14} className="mr-1.5" />
-                  START TIMER
-                </button>
+                <div className="relative">
+                  <div className="flex flex-col items-center">
+                    <button 
+                      onClick={() => setIsTimerDropdownOpen(!isTimerDropdownOpen)}
+                      className="flex items-center px-3 py-1.5 text-xs font-semibold text-blue-600 bg-blue-50 border border-blue-100 rounded hover:bg-blue-100 transition-colors"
+                    >
+                      <Timer size={14} className="mr-1.5" />
+                      START TIMER
+                    </button>
+                    <span className="block text-[9px] text-gray-400 mt-0.5 text-right">1s timer = 1m log (hỗ trợ test)</span>
+                  </div>
+                  {isTimerDropdownOpen && (
+                    <div className="absolute top-full right-0 mt-1 w-[400px] bg-white border border-gray-200 rounded shadow-lg z-50 overflow-hidden">
+                      <div className="p-2 border-b border-gray-100 relative">
+                        <input type="text" placeholder="Search" className="w-full pl-3 pr-8 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:border-blue-500" />
+                        <SearchIcon size={16} className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                      </div>
+                      <div className="max-h-64 overflow-y-auto py-1">
+                        {mockTasks.map(task => (
+                          <div 
+                            key={task.id}
+                            onMouseEnter={() => setHoveredTask(task.id)}
+                            onMouseLeave={() => setHoveredTask(null)}
+                            className="flex items-center justify-between px-4 py-2 hover:bg-gray-50 cursor-pointer group"
+                          >
+                            <div className="flex items-center truncate text-[13px]">
+                              <span className="text-blue-600 mr-2 shrink-0">{task.id}</span>
+                              <span className="text-gray-700 truncate">{task.name}</span>
+                            </div>
+                            {hoveredTask === task.id && (
+                              <button onClick={(e) => { e.stopPropagation(); handleStartTaskClick(task); }} className="text-blue-600 text-[13px] font-medium hover:underline bg-white pl-2 shrink-0">
+                                Start
+                              </button>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
               ) : (
                 <div className="flex items-center px-3 py-1 bg-[#eaf4ec] text-[#052e16] rounded border border-green-200">
                   <span className="font-bold mr-2 text-[13px]">{activeTimerTask?.id}</span>
@@ -260,36 +293,6 @@ export default function App() {
                   <button onClick={() => setIsStopConfirmOpen(true)} className="w-5 h-5 bg-[#d9534f] rounded-full flex items-center justify-center hover:bg-red-600 transition-colors">
                     <div className="w-2 h-2 bg-white rounded-sm"></div>
                   </button>
-                </div>
-              )}
-
-              {/* Dropdown Menu */}
-              {isTimerDropdownOpen && (
-                <div className="absolute top-full right-0 mt-1 w-[400px] bg-white border border-gray-200 rounded shadow-lg z-50 overflow-hidden">
-                  <div className="p-2 border-b border-gray-100 relative">
-                    <input type="text" placeholder="Search" className="w-full pl-3 pr-8 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:border-blue-500" />
-                    <SearchIcon size={16} className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                  </div>
-                  <div className="max-h-64 overflow-y-auto py-1">
-                    {mockTasks.map(task => (
-                      <div 
-                        key={task.id}
-                        onMouseEnter={() => setHoveredTask(task.id)}
-                        onMouseLeave={() => setHoveredTask(null)}
-                        className="flex items-center justify-between px-4 py-2 hover:bg-gray-50 cursor-pointer group"
-                      >
-                        <div className="flex items-center truncate text-[13px]">
-                          <span className="text-blue-600 mr-2 shrink-0">{task.id}</span>
-                          <span className="text-gray-700 truncate">{task.name}</span>
-                        </div>
-                        {hoveredTask === task.id && (
-                          <button onClick={(e) => { e.stopPropagation(); handleStartTaskClick(task); }} className="text-blue-600 text-[13px] font-medium hover:underline bg-white pl-2 shrink-0">
-                            Start
-                          </button>
-                        )}
-                      </div>
-                    ))}
-                  </div>
                 </div>
               )}
             </div>
@@ -488,6 +491,11 @@ export default function App() {
                     </div>
                   </div>
                 </div>
+
+                {/* Prototype note: Duration status tags */}
+                <p className="text-[10px] text-gray-400 italic mt-2">
+                  Note: Các status (TỰ ĐỘNG, HẾT GIỜ, USER EDITED) trong ô Duration chỉ để chú thích prototype — sẽ không áp dụng trên giao diện triển khai.
+                </p>
 
                 {/* --- WARNING MESSAGES LOGIC --- */}
                 {/* ---- END TIMER FLOW (FR-04) ---- */}
