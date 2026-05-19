@@ -43,7 +43,6 @@
     const { useState, useEffect, useRef, createElement: h } = React;
 
     const DAILY_CAP_MINS = 480;
-    const MAX_DAILY_MINS = 1440;
 
     const formatMins = (totalMins) => {
       if (totalMins <= 0) return '0h';
@@ -211,7 +210,6 @@
       };
 
       const handleSubmit = () => {
-        if (isOver24h) return;
         const submittedMins = parseMins(durationInput);
         if (submittedMins <= 0) {
           setIsLogWorkModalOpen(false);
@@ -233,7 +231,6 @@
       const remainingTotal = DAILY_CAP_MINS - totalLoggedMins;
       const projectedTotal = totalLoggedMins + inputMins;
       const isOverLimit = projectedTotal > DAILY_CAP_MINS;
-      const isOver24h = projectedTotal > MAX_DAILY_MINS;
       const overTimeMins = projectedTotal - DAILY_CAP_MINS;
 
       const isTimerMode = logContext.type === 'timer';
@@ -445,19 +442,12 @@
               ['7h logged (TC-04/05/06)', 420],
               ['8h logged (TC-03)', 480],
               ['9h logged (remaining < 0)', 540],
-              ['24h logged (Over 24h)', 1440],
-              ['Concurrent +5h (TC-07)', totalLoggedMins + 300],
+              ['24h logged', 1440],
             ].map(([label, val]) =>
               h('button', {
                 key: label,
-                onClick: () => {
-                  if (label.includes('TC-07')) {
-                    setPostSubmitMsg(`Simulated 2nd tab: +5h logged. Total now: ${formatMins(val)}. Extra/OT by ${formatMins(Math.max(0, val - DAILY_CAP_MINS))}.`);
-                    setTimeout(() => setPostSubmitMsg(null), 4000);
-                  }
-                  setTotalLoggedMins(typeof val === 'function' ? val : val);
-                },
-                className: `text-xs px-3 py-1.5 border rounded text-left ${!label.includes('TC-07') && totalLoggedMins === val ? 'bg-blue-50 border-blue-300 text-blue-700' : 'hover:bg-gray-50'}`
+                onClick: () => setTotalLoggedMins(val),
+                className: `text-xs px-3 py-1.5 border rounded text-left ${totalLoggedMins === val ? 'bg-blue-50 border-blue-300 text-blue-700' : 'hover:bg-gray-50'}`
               }, label)
             )
           )
@@ -629,7 +619,7 @@
                 ),
 
                 /* ---- MANUAL LOG FLOW (FR-05) ---- */
-                !isTimerMode && !isOver24h && h('div', {
+                !isTimerMode && h('div', {
                   className: `p-3 rounded text-[13px] border ${
                     (!isEditedByUser && remainingTotal > 0) || (isEditedByUser && !isOverLimit)
                       ? 'bg-[#f0f4ff] text-[#172b4d] border-blue-100'
@@ -652,19 +642,8 @@
                       !isEditedByUser && remainingTotal <= 0 &&
                         h('span', { className: 'font-bold block' }, `You have reached today's 8-hour standard threshold. You are Extra/OT by ${formatMins(effectiveOverMins)}.`),
                       /* Manual: Edited to be over limit */
-                      isEditedByUser && isOverLimit && !isOver24h &&
+                      isEditedByUser && isOverLimit &&
                         h('span', { className: 'font-bold' }, `If saved, today's total will be ${formatMins(projectedTotal)} — you are Extra/OT by ${formatMins(effectiveOverMins)} compared to standard hours.`)
-                    )
-                  )
-                ),
-
-                /* 24h Exceeded Warning */
-                isOver24h && h('div', { className: 'p-3 rounded text-[13px] border bg-red-50 text-red-700 border-red-200' },
-                  h('div', { className: 'flex items-start gap-2' },
-                    h(Icon, { name: 'AlertTriangle', size: 16, color: '#dc2626', className: 'mt-0.5 shrink-0' }),
-                    h('div', null,
-                      h('span', { className: 'font-bold block' }, 'Invalid time: Total work hours cannot exceed 24 hours (1440 minutes) in a day.'),
-                      h('span', { className: 'text-xs text-red-600 italic mt-1 block' }, 'Please reduce the duration to stay within the 24-hour limit.')
                     )
                   )
                 ),
@@ -678,22 +657,15 @@
 
             /* Modal Footer */
             h('div', { className: 'px-6 py-4 border-t border-gray-200 flex justify-between items-center rounded-b' },
-              h('div', { className: `flex items-center px-3 py-1.5 rounded-full border shadow-sm ${
-                isOver24h ? 'bg-red-50 text-red-700 border-red-200' : 'bg-blue-50 text-blue-700 border-blue-100'
-              }` },
-                h('div', { className: `w-2 h-2 rounded-full mr-2 ${isOver24h ? 'bg-red-600' : 'bg-blue-600'}` }),
+              h('div', { className: 'flex items-center px-3 py-1.5 rounded-full border shadow-sm bg-blue-50 text-blue-700 border-blue-100' },
+                h('div', { className: 'w-2 h-2 rounded-full mr-2 bg-blue-600' }),
                 h('span', { className: 'text-xs font-semibold' }, `${formatMins(totalLoggedMins)} logged today`)
               ),
               h('div', { className: 'flex gap-3' },
                 h('button', { onClick: () => setIsLogWorkModalOpen(false), className: 'text-[#42526e] border border-gray-300 px-4 py-1.5 rounded text-[13px] font-bold hover:bg-gray-50' }, 'Discard'),
                 h('button', {
                   onClick: handleSubmit,
-                  disabled: isOver24h,
-                  className: `px-6 py-1.5 rounded text-[13px] font-bold shadow-sm ${
-                    isOver24h
-                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                      : 'bg-[#2563eb] text-white hover:bg-blue-700'
-                  }`
+                  className: 'px-6 py-1.5 rounded text-[13px] font-bold shadow-sm bg-[#2563eb] text-white hover:bg-blue-700'
                 }, 'Submit')
               )
             )
