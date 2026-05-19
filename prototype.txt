@@ -168,8 +168,6 @@ export default function App() {
   const actualMins = logContext.actualLoggedMins;
 
   /* === DURATION TAG — Giải thích cho dev ===
-   * Nhãn này chỉ hiển thị ở prototype để dev biết trạng thái, sẽ không dùng trên UI thật.
-   *
    * TAG "AUTO-FILL" (xanh dương): giá trị tự động điền vào Duration.
    *   - End Timer: auto-fill = actual elapsed time (thời gian timer đã chạy)
    *   - Manual Log: auto-fill = remaining_capacity tại thời điểm mở form
@@ -187,10 +185,10 @@ export default function App() {
     durationTag = 'USER EDITED';
     tagColor = 'bg-gray-600 text-white';
   } else if (inputMins === 0) {
-    durationTag = 'HẾT GIỜ (NO REMAINING)';
+    durationTag = 'NO REMAINING';
     tagColor = 'bg-[#fef08a] text-[#854d0e] border border-[#fde047]';
   } else {
-    durationTag = 'TỰ ĐỘNG (AUTO-FILL)';
+    durationTag = 'AUTO-FILL';
     tagColor = 'bg-blue-600 text-white';
   }
 
@@ -306,9 +304,9 @@ export default function App() {
                 </div>
               )}
 
-              {/* Prototype note: 1s chạy timer = 1p log — prototype, sẽ không dùng ở môi trường thật */}
+              {/* Prototype note: 1s chạy timer = 1p log để test nhanh các case */}
               <div className="absolute top-full left-1/2 -translate-x-1/2 mt-0.5 text-[10px] text-gray-400 whitespace-nowrap pointer-events-none leading-tight text-center">
-                ⏱ 1s chạy timer = 1p log — prototype, sẽ không dùng ở môi trường thật
+                ⏱ 1s chạy timer = 1p log — test case nào chạy số giây tương ứng
               </div>
             </div>
             
