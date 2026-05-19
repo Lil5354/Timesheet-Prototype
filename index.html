@@ -246,7 +246,7 @@
       const isTimerMode = logContext.type === 'timer';
       const actualMins = logContext.actualLoggedMins;
       const remainingIsPositive = remainingTotal > 0;
-      const actualExceedsRemaining = actualMins > remainingTotal;
+      const actualExceedsRemaining = actualMins > DAILY_CAP_MINS;
       const effectiveOverMins = Math.max(0, overTimeMins);
 
       let durationTag = '';
@@ -674,7 +674,7 @@
                 isTimerMode && !isOverMax && h('div', {
                   className: `p-3 rounded text-[13px] border ${
                     !isEditedByUser
-                      ? ((remainingIsPositive && !actualExceedsRemaining)
+                      ? ((remainingIsPositive && !actualExceedsRemaining) || remainingTotal === 0
                           ? 'bg-[#f0f4ff] text-[#172b4d] border-blue-100'
                           : 'bg-[#fffbeb] text-[#92400e] border-[#fde68a]')
                       : (isOverLimit ? 'bg-[#fffbeb] text-[#92400e] border-[#fde68a]' : 'bg-[#f0f4ff] text-[#172b4d] border-blue-100')
@@ -682,11 +682,11 @@
                 },
                   h('div', { className: 'flex items-start gap-2' },
                     !isEditedByUser
-                      ? (remainingIsPositive && !actualExceedsRemaining
+                      ? ((remainingIsPositive && !actualExceedsRemaining) || remainingTotal === 0
                           ? h(Icon, { name: 'Info', size: 16, color: '#3b82f6', className: 'mt-0.5 shrink-0' })
                           : h('span', { className: 'relative inline-block' },
                               h(Icon, { name: 'AlertTriangle', size: 16, color: '#d97706', className: 'mt-0.5 tooltip-trigger' },
-                                !remainingIsPositive && h('span', { className: 'tooltip-text' }, "You are in the Extra/OT zone. Please activate the Extra/OT button to record your overtime.")
+                                remainingTotal < 0 && h('span', { className: 'tooltip-text' }, "You are in the Extra/OT zone. Please activate the Extra/OT button to record your overtime.")
                               )
                             )
                         )
@@ -698,15 +698,21 @@
                       /* End Timer — Not edited, remaining > 0, actual > remaining */
                       !isEditedByUser && remainingIsPositive && actualExceedsRemaining &&
                         h('span', { className: 'font-bold' }, `Actual logged time: ${formatMins(actualMins)}. You are Extra/OT by ${formatMins(effectiveOverMins)}.`),
-                      /* End Timer — Not edited, remaining ≤ 0 */
-                      !isEditedByUser && !remainingIsPositive &&
+                      /* End Timer — Not edited, remaining = 0 */
+                      !isEditedByUser && remainingTotal === 0 &&
+                        h('span', { className: 'font-bold block' }, `You have reached today's 8-hour standard threshold.`),
+                      /* End Timer — Not edited, remaining < 0 */
+                      !isEditedByUser && remainingTotal < 0 &&
                         h('span', { className: 'font-bold block' }, `You have reached today's 8-hour standard threshold. You are Extra/OT by ${formatMins(effectiveOverMins)}.`),
                       /* End Timer — User edited and over limit */
                       isEditedByUser && isOverLimit &&
                         h('span', { className: 'font-bold' }, `You are Extra/OT by ${formatMins(effectiveOverMins)} compared to today's standard hours.`),
                       /* End Timer — User edited but still within limit */
-                      isEditedByUser && !isOverLimit &&
-                        h('span', { className: 'font-medium' }, `Actual logged time: ${formatMins(actualMins)}. Remaining today: ${formatMins(DAILY_CAP_MINS - projectedTotal)}.`)
+                      isEditedByUser && !isOverLimit && DAILY_CAP_MINS - projectedTotal > 0 &&
+                        h('span', { className: 'font-medium' }, `Actual logged time: ${formatMins(actualMins)}. Remaining today: ${formatMins(DAILY_CAP_MINS - projectedTotal)}.`),
+                      /* End Timer — User edited, exactly reaching cap */
+                      isEditedByUser && !isOverLimit && DAILY_CAP_MINS - projectedTotal === 0 &&
+                        h('span', { className: 'font-bold block' }, `You have reached today's 8-hour standard threshold.`)
                     )
                   )
                 ),
@@ -714,31 +720,37 @@
                 /* ---- MANUAL LOG FLOW (FR-05) ---- */
                 !isTimerMode && !isOverMax && h('div', {
                   className: `p-3 rounded text-[13px] border ${
-                    (!isEditedByUser && remainingTotal > 0) || (isEditedByUser && !isOverLimit)
+                    (!isEditedByUser && remainingTotal >= 0) || (isEditedByUser && !isOverLimit)
                       ? 'bg-[#f0f4ff] text-[#172b4d] border-blue-100'
                       : 'bg-[#fffbeb] text-[#92400e] border-[#fde68a]'
                   }`
                 },
                   h('div', { className: 'flex items-start gap-2' },
-                    ((!isEditedByUser && remainingTotal > 0) || (isEditedByUser && !isOverLimit))
+                    ((!isEditedByUser && remainingTotal >= 0) || (isEditedByUser && !isOverLimit))
                       ? h(Icon, { name: 'Info', size: 16, color: '#3b82f6', className: 'mt-0.5 shrink-0' })
                       : h('span', { className: 'relative inline-block' },
                           h(Icon, { name: 'AlertTriangle', size: 16, color: '#d97706', className: 'mt-0.5 tooltip-trigger' },
-                            !remainingIsPositive && h('span', { className: 'tooltip-text' }, "You are in the Extra/OT zone. Please activate the Extra/OT button to record your overtime.")
+                            remainingTotal < 0 && h('span', { className: 'tooltip-text' }, "You are in the Extra/OT zone. Please activate the Extra/OT button to record your overtime.")
                           )
                         ),
                     h('div', null,
                       /* Manual: Not over limit */
                       !isEditedByUser && remainingTotal > 0 &&
                         h('span', { className: 'font-medium' }, `You have ${formatMins(remainingTotal)} of standard time left to log today.`),
-                      /* Manual: Just opened, already over limit (remaining ≤ 0) */
-                      !isEditedByUser && remainingTotal <= 0 &&
+                      /* Manual: Just opened, remaining = 0 */
+                      !isEditedByUser && remainingTotal === 0 &&
+                        h('span', { className: 'font-bold block' }, `You have reached today's 8-hour standard threshold.`),
+                      /* Manual: Just opened, remaining < 0 */
+                      !isEditedByUser && remainingTotal < 0 &&
                         h('span', { className: 'font-bold block' }, `You have reached today's 8-hour standard threshold. You are Extra/OT by ${formatMins(effectiveOverMins)}.`),
                       /* Manual: Edited to be over limit */
                       isEditedByUser && isOverLimit &&
                         h('span', { className: 'font-bold' }, `If saved, today's total will be ${formatMins(projectedTotal)} — you are Extra/OT by ${formatMins(effectiveOverMins)} compared to standard hours.`),
+                      /* Manual: Edited, exactly reaching cap */
+                      isEditedByUser && !isOverLimit && DAILY_CAP_MINS - projectedTotal === 0 &&
+                        h('span', { className: 'font-bold block' }, `You have reached today's 8-hour standard threshold.`),
                       /* Manual: Edited but still within limit */
-                      isEditedByUser && !isOverLimit &&
+                      isEditedByUser && !isOverLimit && DAILY_CAP_MINS - projectedTotal > 0 &&
                         h('span', { className: 'font-medium' }, `You have ${formatMins(DAILY_CAP_MINS - projectedTotal)} of standard time left to log today.`)
                     )
                   )
